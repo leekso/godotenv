@@ -98,6 +98,12 @@ func Read(filenames ...string) (envMap map[string]string, err error) {
 // Parse reads an env file from io.Reader, returning a map of keys and values.
 func Parse(r io.Reader) (envMap map[string]string, err error) {
 	envMap = make(map[string]string)
+	currentEnvMap := make(map[string]string)
+
+	for _, envLine := range os.Environ() {
+		envKeyValue := strings.Split(envLine, "=")
+		currentEnvMap[envKeyValue[0]] = strings.Join(envKeyValue[1:], "=")
+	}
 
 	var lines []string
 	scanner := bufio.NewScanner(r)
@@ -112,11 +118,13 @@ func Parse(r io.Reader) (envMap map[string]string, err error) {
 	for _, fullLine := range lines {
 		if !isIgnoredLine(fullLine) {
 			var key, value string
-			key, value, err = parseLine(fullLine, envMap)
+			key, value, err = parseLine(fullLine, currentEnvMap)
 
 			if err != nil {
 				return
 			}
+
+			currentEnvMap[key] = value
 			envMap[key] = value
 		}
 	}
